@@ -6,6 +6,7 @@ import { theme } from './data'
 
 export type Stage = 'parcel' | 'unboxed' | 'lifted' | 'reading'
 export interface FlipDrag { index: number; p: number }
+export type Focus = 'both' | 'left' | 'right'
 
 const W = 1.4, H = 1.87, SEG = 28, GAP = 0.006
 
@@ -75,9 +76,9 @@ function BackBoard() {
   )
 }
 
-interface Props { stage: Stage; flipped: number; drag: MutableRefObject<FlipDrag | null>; speed: number; showBack: boolean }
+interface Props { stage: Stage; flipped: number; drag: MutableRefObject<FlipDrag | null>; speed: number; showBack: boolean; focus: Focus }
 
-export function Magazine({ stage, flipped, drag, speed, showBack }: Props) {
+export function Magazine({ stage, flipped, drag, speed, showBack, focus }: Props) {
   const outer = useRef<THREE.Group>(null)
   const inner = useRef<THREE.Group>(null)
   const progress = useRef<number[]>(Array(SHEET_COUNT).fill(0))
@@ -88,16 +89,18 @@ export function Magazine({ stage, flipped, drag, speed, showBack }: Props) {
     const o = outer.current, n = inner.current
     if (!o || !n) return
     const aspect = size.width / size.height
+    const shift = flipped === 0 ? -W / 2 : flipped >= SHEET_COUNT ? W / 2 : 0
+    const single = focus !== 'both' // zoom in on one page (handy on phones)
     const t = stage === 'reading'
-      ? { y: 0.03, z: 0.2, rx: -Math.PI / 2, s: Math.min(1.6, aspect * 1.15) }
+      ? { y: 0.03, z: 0.2, rx: -Math.PI / 2, s: single ? Math.min(1.72, aspect * 2.4) : Math.min(1.6, aspect * 1.15) }
       : stage === 'lifted' ? { y: 1.5, z: 0.6, rx: 0, s: 1 }
       : { y: 0.22, z: 0.05, rx: -Math.PI / 2, s: 1 }
+    const cx = stage === 'reading' && single ? -(shift + (focus === 'right' ? W / 2 : -W / 2)) * t.s : 0
     const k = 1 - Math.pow(0.02, dt * (speed > 10 ? 4 : 1))
-    o.position.lerp(tmp.set(0, t.y, t.z), k)
+    o.position.lerp(tmp.set(cx, t.y, t.z), k)
     o.rotation.x += (t.rx - o.rotation.x) * k
     o.rotation.y += ((stage === 'lifted' && showBack ? Math.PI : 0) - o.rotation.y) * k
     o.scale.setScalar(o.scale.x + (t.s - o.scale.x) * k)
-    const shift = flipped === 0 ? -W / 2 : flipped >= SHEET_COUNT ? W / 2 : 0
     n.position.x += (shift - n.position.x) * k
 
     const d = drag.current

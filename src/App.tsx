@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type PointerEvent as RPointerEven
 import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import * as THREE from 'three'
-import { Magazine, SHEET_COUNT, type FlipDrag, type Stage } from './Magazine'
+import { Magazine, SHEET_COUNT, type FlipDrag, type Focus, type Stage } from './Magazine'
 import { labelTexture, noiseTexture, sealTexture, weaveTexture, woodTexture } from './paper'
 import { MusicPlayer } from './Music'
 import { parcel, settings, theme } from './data'
@@ -162,7 +162,7 @@ function Parcel({ open, sealRemoved, onRemoved, onDragState, away }: {
 
 interface SceneProps {
   stage: Stage; flipped: number; sealRemoved: boolean; onRemoved: () => void; onDragState: (d: boolean) => void
-  drag: React.MutableRefObject<FlipDrag | null>; zoom: number; resetKey: number; speed: number; controlsOn: boolean; showBack: boolean
+  drag: React.MutableRefObject<FlipDrag | null>; zoom: number; resetKey: number; speed: number; controlsOn: boolean; showBack: boolean; focus: Focus
 }
 
 function Scene(p: SceneProps) {
@@ -181,7 +181,7 @@ function Scene(p: SceneProps) {
         <meshStandardMaterial map={wood} bumpMap={wood} bumpScale={0.4} roughness={0.6} />
       </mesh>
       <Parcel open={p.stage !== 'parcel'} sealRemoved={p.sealRemoved} onRemoved={p.onRemoved} onDragState={p.onDragState} away={p.stage === 'reading'} />
-      <Magazine stage={p.stage} flipped={p.flipped} drag={p.drag} speed={p.speed} showBack={p.showBack} />
+      <Magazine stage={p.stage} flipped={p.flipped} drag={p.drag} speed={p.speed} showBack={p.showBack} focus={p.focus} />
       <OrbitControls makeDefault enabled={p.controlsOn} enablePan={false} minDistance={2.5} maxDistance={10} maxPolarAngle={Math.PI / 2.05} />
       <Rig stage={p.stage} resetKey={p.resetKey} />
       <Zoom zoom={p.zoom} stage={p.stage} />
@@ -195,7 +195,7 @@ const HINTS: Record<Stage, string> = {
   parcel: 'Pull the wax seal toward you to break it, then open the parcel.',
   unboxed: 'Lift the magazine out of the box.',
   lifted: 'Drag to turn the magazine and inspect the cover, spine and back.',
-  reading: 'Drag a page to turn it, or use the arrows.',
+  reading: 'Drag a page to turn it. Use Left, Both or Right to zoom in on a page.',
 }
 
 export default function App() {
@@ -205,6 +205,7 @@ export default function App() {
   const [flipped, setFlipped] = useState(0)
   const [zoom, setZoom] = useState(1)
   const [showBack, setShowBack] = useState(false)
+  const [focus, setFocus] = useState<Focus>(() => (window.innerWidth < 700 ? 'right' : 'both')) // phones start on one page
   const [resetKey, setResetKey] = useState(0)
   const [replayKey, setReplayKey] = useState(0)
   const drag = useRef<FlipDrag | null>(null)
@@ -215,7 +216,7 @@ export default function App() {
   const next = () => setFlipped((f) => Math.min(SHEET_COUNT, f + 1))
   const prev = () => setFlipped((f) => Math.max(0, f - 1))
   const openParcel = () => { if (sealRemoved) setStage('unboxed') } // seal gate
-  const replay = () => { setStage('parcel'); setSealRemoved(false); setFlipped(0); setZoom(1); setShowBack(false); setReplayKey((k) => k + 1) }
+  const replay = () => { setStage('parcel'); setSealRemoved(false); setFlipped(0); setZoom(1); setShowBack(false); setFocus(window.innerWidth < 700 ? 'right' : 'both'); setReplayKey((k) => k + 1) }
 
   useEffect(() => {
     if (stage !== 'reading') return
@@ -257,7 +258,7 @@ export default function App() {
         <Canvas key={replayKey} shadows dpr={[1, 2]} camera={{ position: CAMS.parcel.pos, fov: 40, near: 0.1, far: 60 }}>
           <Scene stage={stage} flipped={flipped} sealRemoved={sealRemoved} onRemoved={() => setSealRemoved(true)}
             onDragState={setSealDragging} drag={drag} zoom={zoom} resetKey={resetKey} speed={speed}
-            controlsOn={stage !== 'reading' && !sealDragging} showBack={showBack} />
+            controlsOn={stage !== 'reading' && !sealDragging} showBack={showBack} focus={focus} />
         </Canvas>
       </div>
       <header className="top"><div className="brand">
@@ -280,6 +281,9 @@ export default function App() {
           {stage === 'reading' && <>
             <button onClick={prev} disabled={flipped === 0} aria-label="Previous page">Previous</button>
             <button onClick={next} disabled={flipped === SHEET_COUNT} aria-label="Next page">Next</button>
+            <button aria-pressed={focus === 'left'} onClick={() => setFocus('left')}>Left</button>
+            <button aria-pressed={focus === 'both'} onClick={() => setFocus('both')}>Both</button>
+            <button aria-pressed={focus === 'right'} onClick={() => setFocus('right')}>Right</button>
             <button onClick={() => setZoom((z) => Math.min(2, z + 0.2))} aria-label="Zoom in">+</button>
             <button onClick={() => setZoom((z) => Math.max(0.6, z - 0.2))} aria-label="Zoom out">−</button>
             <button className="primary" onClick={() => { setShowBack(flipped >= SHEET_COUNT); setFlipped(0); setStage('lifted') }}>{flipped >= SHEET_COUNT ? 'Close and view back' : 'Close magazine'}</button>

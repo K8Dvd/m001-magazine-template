@@ -28,3 +28,5 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
 .yt-host { position: fixed; left: -9999px; top: 0; width: 200px; height: 200px; opacity: 0; pointer-events: none; }
 .hud { max-height: 45vh; }
 @media (max-width: 560px) { .top { flex-direction: column; align-items: flex-start; gap: 8px; } .music input { display: none; } .track { max-width: 50vw; } }
+button[aria-pressed="true"] { background: var(--crimson); border-color: var(--crimson); }
+@media (max-width: 560px) { .row { gap: 6px; } .row button { min-height: 40px; padding: 8px 10px; font-size: 0.9rem; } }
