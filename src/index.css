@@ -1,0 +1,30 @@
+:root {
+  --oxblood: #4A0712; --burgundy: #720D24; --crimson: #A30D2D; --black: #100B0D;
+  --charcoal: #21191C; --white: #F4EAE8; --silver: #B8ADB0;
+  --serif: "Bodoni MT", Didot, "Playfair Display", Georgia, serif;
+}
+* { box-sizing: border-box; }
+html, body, #root { height: 100%; margin: 0; background: var(--black); color: var(--white); font-family: var(--serif); overflow: hidden; }
+.app { position: fixed; inset: 0; }
+.stage { position: absolute; inset: 0; touch-action: none; cursor: grab; }
+.stage canvas { display: block; }
+.brand strong { font-size: 1.35rem; letter-spacing: 0.08em; color: var(--crimson); }
+.brand span { font-style: italic; color: var(--silver); max-width: 44ch; }
+.hud { position: absolute; left: 0; right: 0; bottom: 0; padding: 12px 16px max(16px, env(safe-area-inset-bottom)); display: flex; flex-direction: column; align-items: center; gap: 10px; pointer-events: none; background: linear-gradient(transparent, rgba(16, 11, 13, 0.85)); }
+.hud p { margin: 0; font-style: italic; color: var(--silver); text-align: center; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+button { pointer-events: auto; font: inherit; color: var(--white); background: var(--charcoal); border: 1px solid var(--silver); padding: 10px 16px; min-height: 44px; min-width: 44px; cursor: pointer; }
+button:hover:not(:disabled) { border-color: var(--white); }
+button:focus-visible { outline: 2px solid var(--white); outline-offset: 2px; }
+button.primary { background: var(--crimson); border-color: var(--crimson); }
+button:disabled { opacity: 0.4; cursor: not-allowed; }
+@media (max-width: 560px) { .brand span { font-size: 0.9rem; } button { padding: 10px 12px; } }
+.top { position: absolute; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: max(16px, env(safe-area-inset-top)) 16px 0; pointer-events: none; }
+.brand { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.music { pointer-events: auto; display: flex; align-items: center; gap: 8px; background: rgba(16, 11, 13, 0.75); border: 1px solid var(--silver); padding: 4px 8px; max-width: 100%; }
+.music button { min-height: 36px; padding: 4px 12px; }
+.track { max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.85rem; font-style: italic; color: var(--silver); }
+.music input { width: 80px; accent-color: var(--crimson); }
+.yt-host { position: fixed; left: -9999px; top: 0; width: 200px; height: 200px; opacity: 0; pointer-events: none; }
+.hud { max-height: 45vh; }
+@media (max-width: 560px) { .top { flex-direction: column; align-items: flex-start; gap: 8px; } .music input { display: none; } .track { max-width: 50vw; } }
